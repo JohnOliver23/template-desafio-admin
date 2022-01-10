@@ -11,7 +11,7 @@ import AppProvider from "./hooks";
 import Routes from "./routes";
 
 import { ChakraProvider } from "@chakra-ui/react";
-
+import SideBar from "./components/SideBar";
 import { ToastContainer } from "react-toastify";
 
 const App = () => {
@@ -19,7 +19,9 @@ const App = () => {
     <Router>
       <ChakraProvider>
         <AppProvider>
-          <Routes />
+          <SideBar>
+            <Routes />
+          </SideBar>
           <ToastContainer />
         </AppProvider>
       </ChakraProvider>
