@@ -88,7 +88,7 @@ const SignIn: React.FC = () => {
             colorScheme="purple"
             color="#fff"
             isLoading={isLoading}
-            loadingText="Submitting"
+            loadingText="Carregando..."
           >
             Entrar
           </Button>

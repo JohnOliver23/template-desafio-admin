@@ -35,7 +35,6 @@ function Users() {
               : user.email,
         }));
 
-        console.log(userList);
         setUsers(userList);
       })
       .catch((err) => {
