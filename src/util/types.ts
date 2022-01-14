@@ -11,10 +11,13 @@ export enum Status {
   REQUESTED = "requested",
   APPROVED = "approved",
   REJECTED = "rejected",
+  DELETED = "deleted",
+  CREATED = "created",
 }
 
 export enum TypeAudit {
   CARD_STATUS_CHANGE = "card-status-change",
+  CARD_DELETE = "card-delete",
 }
 export interface Card {
   createdAt: string;

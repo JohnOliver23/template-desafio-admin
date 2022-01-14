@@ -9,15 +9,22 @@ import {
   Box,
   Flex,
   Button,
+  IconButton,
 } from "@chakra-ui/react";
 import React, { useCallback, useEffect, useState, useReducer } from "react";
 import { toast } from "react-toastify";
 import Dialog from "../../components/Dialog";
 import StatusCard from "../../components/StatusCard";
-import { createAudit, getCards, updateCard } from "../../services/api";
+import {
+  createAudit,
+  deleteCard,
+  getCards,
+  updateCard,
+} from "../../services/api";
 import { Audit, Card, Status, TypeAudit } from "../../util/types";
 import { cardsReducer } from "../../util/reducer";
 import { useAuth } from "../../hooks/auth";
+import { FiTrash } from "react-icons/fi";
 
 function Cards() {
   const [cards, setCards] = useReducer(cardsReducer, []);
@@ -50,16 +57,16 @@ function Cards() {
   }, []);
 
   const handleDialogOpen = useCallback(
-    (type: Status, card: Card) => {
-      if (type === Status.REJECTED) {
-        setTitleDialog("Rejeitar Pedido");
-        setColorSecondarySchema("red");
-        setTextSecondaryAction("Rejeitar");
-      } else {
-        setTitleDialog("Aprovar Pedido");
-        setColorSecondarySchema("green");
-        setTextSecondaryAction("Aprovar");
-      }
+    (
+      type: Status,
+      card: Card,
+      title: string,
+      color: string,
+      textAction: string
+    ) => {
+      setTitleDialog(title);
+      setColorSecondarySchema(color);
+      setTextSecondaryAction(textAction);
       setNewStatus(type);
       setCurrentCard(card);
       setIsDialogOpen(true);
@@ -68,6 +75,67 @@ function Cards() {
   );
 
   const onClose = async () => setIsDialogOpen(false);
+
+  const deleteOrder = () => {
+    setIsLoading(true);
+    if (currentCard) {
+      deleteCard(currentCard.id)
+        .then(() => {
+          //Deletando cartão da API
+          setCards({ type: "REMOVE", payload: currentCard.id });
+
+          //criando objeto de Log (Auditoria)
+          const newAudit: Audit = {
+            createdAt: String(new Date()),
+            type: TypeAudit.CARD_DELETE,
+            before: {
+              createdAt: currentCard.createdAt,
+              id: currentCard.id,
+              metadatas: {
+                name: currentCard.metadatas.name,
+                digits: currentCard.metadatas.digits,
+              },
+              status: currentCard.status,
+              updatedAt: currentCard.updatedAt,
+              user_id: currentCard.user_id,
+            },
+            after: {
+              createdAt: currentCard.createdAt,
+              id: currentCard.id,
+              metadatas: {
+                name: currentCard.metadatas.name,
+                digits: currentCard.metadatas.digits,
+              },
+              status: Status.DELETED,
+              updatedAt: String(new Date()),
+              user_id: currentCard.user_id,
+            },
+            requestedBy: user.email,
+          };
+
+          //Criando Log de Auditoria
+          createAudit(newAudit)
+            .then(() => {
+              toast.success(
+                `o pedido de cartão ${currentCard.metadatas.digits} foi Deletado`
+              );
+
+              setIsLoading(false);
+              onClose();
+            })
+            .catch((err: any) => {
+              console.log(err);
+              toast.error(err);
+            });
+        })
+        .catch((err: any) => {
+          console.log(err);
+          toast.error(err);
+          setIsLoading(false);
+          onClose();
+        });
+    }
+  };
 
   const updateOrder = () => {
     setIsLoading(true);
@@ -113,8 +181,7 @@ function Cards() {
 
         //Criando Log de Auditoria
         createAudit(newAudit)
-          .then((responseAudit) => {
-            console.log(responseAudit);
+          .then(() => {
             if (newStatus === Status.REJECTED) {
               toast.success(
                 `o pedido de cartão ${newCard.metadatas?.digits} foi Rejeitado`
@@ -150,7 +217,9 @@ function Cards() {
         textSecondaryAction={textSecondaryAction}
         colorSecondarySecheme={colorSecondarySecheme}
         onPrimaryAction={onClose}
-        onSecondaryAction={updateOrder}
+        onSecondaryAction={
+          newStatus === Status.DELETED ? deleteOrder : updateOrder
+        }
         isLoading={isLoading}
       />
       <Flex justifyContent="center" align="center">
@@ -179,6 +248,7 @@ function Cards() {
                 <Th>Limite</Th>
                 <Th>Status</Th>
                 <Th>Ações</Th>
+                <Th></Th>
               </Tr>
             </Thead>
             <Tbody color="black" fontFamily="Nunito">
@@ -203,7 +273,15 @@ function Cards() {
                       width="180px"
                     >
                       <Button
-                        onClick={() => handleDialogOpen(Status.REJECTED, card)}
+                        onClick={() =>
+                          handleDialogOpen(
+                            Status.REJECTED,
+                            card,
+                            "Rejeitar Pedido",
+                            "red",
+                            "Rejeitar"
+                          )
+                        }
                         colorScheme="red"
                         fontSize="14px"
                         disabled={!!card.updatedAt}
@@ -211,7 +289,15 @@ function Cards() {
                         Rejeitar
                       </Button>
                       <Button
-                        onClick={() => handleDialogOpen(Status.APPROVED, card)}
+                        onClick={() =>
+                          handleDialogOpen(
+                            Status.APPROVED,
+                            card,
+                            "Aprovar Pedido",
+                            "green",
+                            "Aprovar"
+                          )
+                        }
                         colorScheme="green"
                         fontSize="14px"
                         disabled={!!card.updatedAt}
@@ -219,6 +305,23 @@ function Cards() {
                         Aprovar
                       </Button>
                     </Flex>
+                  </Td>
+                  <Td>
+                    <IconButton
+                      variant="outline"
+                      aria-label="order-card-delete"
+                      colorScheme="red"
+                      onClick={() =>
+                        handleDialogOpen(
+                          Status.DELETED,
+                          card,
+                          "Deletar Pedido",
+                          "red",
+                          "Deletar"
+                        )
+                      }
+                      icon={<FiTrash />}
+                    />
                   </Td>
                 </Tr>
               ))}

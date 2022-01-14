@@ -38,6 +38,17 @@ export const updateCard = async (card: any) => {
   return result;
 };
 
+export const deleteCard = async (id: number) => {
+  const result = await api
+    .delete(`/cards/${id}`)
+    .then((res) => res.data)
+    .catch((err) => {
+      console.log(err.response);
+      return err.response;
+    });
+  return result;
+};
+
 export const createAudit = async (audit: Audit) => {
   const result = await api
     .post("/audits", audit)
