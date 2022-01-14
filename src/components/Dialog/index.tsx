@@ -19,6 +19,7 @@ interface IDialog {
   colorSecondarySecheme?: string;
   onPrimaryAction(): void;
   onSecondaryAction: Function;
+  isLoading: boolean;
 }
 
 function Dialog({
@@ -31,6 +32,7 @@ function Dialog({
   colorSecondarySecheme,
   onPrimaryAction,
   onSecondaryAction,
+  isLoading,
 }: IDialog) {
   const cancelRef = useRef();
   return (
@@ -59,6 +61,8 @@ function Dialog({
               colorScheme={colorSecondarySecheme}
               onClick={() => onSecondaryAction()}
               ml={3}
+              isLoading={isLoading}
+              loadingText="Carregando..."
             >
               {textSecondaryAction}
             </Button>

@@ -1,7 +1,7 @@
 import { Flex, Icon, Link, FlexProps } from "@chakra-ui/react";
 import { IconType } from "react-icons";
 import { ReactText } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useHistory } from "react-router-dom";
 
 interface NavItemProps extends FlexProps {
   icon: IconType;
@@ -11,9 +11,10 @@ interface NavItemProps extends FlexProps {
 
 const NavItem = ({ icon, children, routeName, ...rest }: NavItemProps) => {
   const location = useLocation();
+  const history = useHistory();
   return (
     <Link
-      href="#"
+      onClick={() => history.push(routeName)}
       style={{ textDecoration: "none" }}
       _focus={{ boxShadow: "none" }}
     >
